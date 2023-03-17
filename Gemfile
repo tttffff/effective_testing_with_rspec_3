@@ -9,3 +9,7 @@ gem "rspec", "~> 3.12"
 gem "standard", "~> 1.25"
 
 gem "coderay", "~> 1.1"
+
+gem "sinatra", "~> 3.0"
+
+gem "rack-test", "~> 2.1"
