@@ -66,7 +66,8 @@ RSpec.configure do |config|
 
   # This setting enables warnings. It's recommended, but in some cases may
   # be too noisy due to issues in dependencies.
-  config.warnings = true
+  # config.warnings = true
+  config.filter_gems_from_backtrace "rack", "rack-test", "sequel", "sinatra"
 
   # Many RSpec users commonly either run the entire suite or an individual
   # file, and it's useful to allow more verbose output when running an
