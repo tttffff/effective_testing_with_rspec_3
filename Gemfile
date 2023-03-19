@@ -13,3 +13,11 @@ gem "coderay", "~> 1.1"
 gem "sinatra", "~> 3.0"
 
 gem "rack-test", "~> 2.1"
+
+gem "sequel", "~> 5.66"
+
+gem "sqlite3", "~> 1.6"
+
+gem "byebug", "~> 11.1"
+
+gem "ox", "~> 2.14"

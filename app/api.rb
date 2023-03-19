@@ -1,6 +1,6 @@
 require "sinatra/base"
-require "json"
 require_relative "ledger"
+require_relative "formatters/formatter_factory"
 
 module ExpenseTracker
   class API < Sinatra::Base
@@ -12,23 +12,25 @@ module ExpenseTracker
     end
 
     post "/expenses" do
-      expense = JSON.parse(request.body.read)
+      formatter = FormatterFactory.get_formatter(request.env["CONTENT_TYPE"])
+      expense = formatter.read(request)
       result = ledger.record(expense)
-      process_result(result, :expense_id)
+      return formatter.write(expense_id: result.expense_id) if result.success?
+      status 422
+      formatter.write(error: result.error_message)
+    rescue UnrecognisedDataFormatError, InvalidDataError => e
+      status 422
+      return e.message
     end
 
     get "/expenses/:date" do
+      formatter = FormatterFactory.get_formatter(request.env["HTTP_ACCEPT"])
       date = params["date"]
       result = ledger.expenses_on(date)
-      process_result(result, :expenses)
-    end
-
-    private
-
-    def process_result(result, target)
-      return JSON.generate(target => result.send(target)) if result.success?
-      status 422
-      JSON.generate(error: result.error_message)
+      formatter.write(result)
+    rescue UnrecognisedDataFormatError => e
+      status 406
+      return e.message
     end
   end
 end
