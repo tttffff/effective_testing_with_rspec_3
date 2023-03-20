@@ -20,7 +20,7 @@ class Coffee
   end
 
   def inspect
-    "#<Coffee #{ingredients.join(', ')}>"
+    "#<Coffee #{ingredients.join(", ")}>"
   end
 end
 

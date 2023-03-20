@@ -1,5 +1,6 @@
 class Tea
   def taste = :earl_grey
+
   def temperature = 205.0
 end
 

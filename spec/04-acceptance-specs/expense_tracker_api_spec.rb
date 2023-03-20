@@ -33,7 +33,7 @@ module ExpenseTracker
         "date" => "2017-06-10"
       )
 
-      groceries = post_expense(
+      post_expense(
         "payee" => "Whole Foods",
         "amount" => 95.20,
         "date" => "2017-06-11"

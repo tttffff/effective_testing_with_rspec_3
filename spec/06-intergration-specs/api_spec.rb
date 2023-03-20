@@ -14,7 +14,7 @@ module ExpenseTracker
 
     def xml_parsed_includes(hash)
       parsed = Ox.load(last_response.body, mode: :hash, symbolize_keys: false)
-      expect(parsed).to include(hash)
+      expect(parsed).to include(hash.transform_values(&:to_s))
     end
 
     def status_is(status)
@@ -27,14 +27,14 @@ module ExpenseTracker
 
     let(:ledger) { instance_double("ExpenseTracker::Ledger") }
 
-    describe 'POST /expenses' do
+    describe "POST /expenses" do
       context "when the header specifies JSON" do
         before { header "Content-Type", "application/json" }
 
         context "when valid JSON is submitted" do
           before do
             allow(ledger).to receive(:record)
-              .with({ "some" => "data" })
+              .with({"some" => "data"})
               .and_return(ledger_result)
           end
 
@@ -90,7 +90,7 @@ module ExpenseTracker
         context "when valid XML is submitted" do
           before do
             allow(ledger).to receive(:record)
-              .with({ "some" => "data" })
+              .with({"some" => "data"})
               .and_return(ledger_result)
           end
 

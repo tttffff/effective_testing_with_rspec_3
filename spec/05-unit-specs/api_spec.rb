@@ -19,7 +19,7 @@ module ExpenseTracker
     let(:ledger) { instance_double("ExpenseTracker::Ledger") }
 
     # Skipping due to public interface change (need to send Content-Type header)
-    xdescribe 'POST /expenses' do
+    xdescribe "POST /expenses" do
       before do
         allow(ledger).to receive(:record)
           .with(expense)
@@ -27,7 +27,7 @@ module ExpenseTracker
       end
 
       context "when the expense is successfully recorded" do
-        let(:expense) { { "some" => "data" } }
+        let(:expense) { {"some" => "data"} }
         let(:ledger_result) { RecordResult.new(true, 417, nil) }
 
         it "returns the expense id" do
@@ -42,7 +42,7 @@ module ExpenseTracker
       end
 
       context "when the expense fails validation" do
-        let(:expense) { { "some" => "data" } }
+        let(:expense) { {"some" => "data"} }
         let(:ledger_result) { RecordResult.new(false, 417, "Expense incomplete") }
 
         it "returns an error message" do
