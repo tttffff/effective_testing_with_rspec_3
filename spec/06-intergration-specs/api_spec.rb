@@ -17,6 +17,15 @@ module ExpenseTracker
       expect(parsed).to include(hash.transform_values(&:to_s))
     end
 
+    def parsed_includes(type, hash)
+      case type
+      when "JSON"
+        json_parsed_includes(hash)
+      when "XML"
+        xml_parsed_includes(hash)
+      end
+    end
+
     def status_is(status)
       expect(last_response.status).to eq(status)
     end
@@ -28,59 +37,75 @@ module ExpenseTracker
     let(:ledger) { instance_double("ExpenseTracker::Ledger") }
 
     describe "POST /expenses" do
+      shared_examples "the data type and format are correct" do |type, data|
+        before do
+          allow(ledger).to receive(:record)
+            .with({"some" => "data"})
+            .and_return(ledger_result)
+        end
+
+        context "when the expense is successfully recorded" do
+          let(:ledger_result) { RecordResult.new(true, 417, nil) }
+
+          it "returns the expense id" do
+            post "/expenses", data
+            parsed_includes(type, "expense_id" => 417)
+          end
+
+          it "responds with a 200 (OK)" do
+            post "/expenses", data
+            status_is 200
+          end
+        end
+
+        context "when the expense fails validation" do
+          let(:ledger_result) { RecordResult.new(false, 417, "Expense incomplete") }
+
+          it "returns an error message" do
+            post "/expenses", data
+            parsed_includes(type, "error" => "Expense incomplete")
+          end
+
+          it "responds with a 422 (Unprocessable entity)" do
+            post "/expenses", data
+            status_is 422
+          end
+        end
+      end
+
+      shared_examples "the data format is incorrect" do |type, data|
+        it "returns an error message" do
+          post "/expenses", data
+          parsed_includes(type, "error" => "Invalid #{type}")
+        end
+
+        it "responds with a 422 (Unprocessable entity)" do
+          post "/expenses", data
+          status_is 422
+        end
+      end
+
+      shared_examples "the data type is incorrect" do
+        it "returns an error message" do
+          post "/expenses", "some data"
+          expect(last_response.body).to eq("Error: Unrecognised data format")
+        end
+
+        it "responds with a 422 (Unprocessable entity)" do
+          post "/expenses", "some data"
+          status_is 422
+        end
+      end
+
       context "when the header specifies JSON" do
         before { header "Content-Type", "application/json" }
 
         context "when valid JSON is submitted" do
-          before do
-            allow(ledger).to receive(:record)
-              .with({"some" => "data"})
-              .and_return(ledger_result)
-          end
-
-          let(:payload) { "{\"some\":\"data\"}" }
-
-          context "when the expense is successfully recorded" do
-            let(:ledger_result) { RecordResult.new(true, 417, nil) }
-
-            it "returns the expense id" do
-              post "/expenses", payload
-              json_parsed_includes("expense_id" => 417)
-            end
-
-            it "responds with a 200 (OK)" do
-              post "/expenses", payload
-              status_is 200
-            end
-          end
-
-          context "when the expense fails validation" do
-            let(:ledger_result) { RecordResult.new(false, 417, "Expense incomplete") }
-
-            it "returns an error message" do
-              post "/expenses", payload
-              json_parsed_includes("error" => "Expense incomplete")
-            end
-
-            it "responds with a 422 (Unprocessable entity)" do
-              post "/expenses", payload
-              status_is 422
-            end
-          end
+          it_behaves_like "the data type and format are correct", "JSON", { "some" => "data" }.to_json
         end
 
         context "when invalid JSON is submitted" do
-          let(:payload) { "invalid JSON" }
-
-          it "returns an error message" do
-            post "/expenses", payload
-            json_parsed_includes("error" => "Invalid JSON")
-          end
-
-          it "responds with a 422 (Unprocessable entity)" do
-            post "/expenses", payload
-            status_is 422
-          end
+          it_behaves_like "the data format is incorrect", "JSON", "invalid JSON"
         end
       end
 
@@ -88,82 +113,22 @@ module ExpenseTracker
         before { header "Content-Type", "application/xml" }
 
         context "when valid XML is submitted" do
-          before do
-            allow(ledger).to receive(:record)
-              .with({"some" => "data"})
-              .and_return(ledger_result)
-          end
-
-          let(:payload) { "<some>data</some>" }
-
-          context "when the expense is successfully recorded" do
-            let(:ledger_result) { RecordResult.new(true, 417, nil) }
-
-            it "returns the expense id" do
-              post "/expenses", payload
-              xml_parsed_includes("expense_id" => "417")
-            end
-
-            it "responds with a 200 (OK)" do
-              post "/expenses", payload
-              status_is 200
-            end
-          end
-
-          context "when the expense fails validation" do
-            let(:ledger_result) { RecordResult.new(false, 417, "Expense incomplete") }
-
-            it "returns an error message" do
-              post "/expenses", payload
-              xml_parsed_includes("error" => "Expense incomplete")
-            end
-
-            it "responds with a 422 (Unprocessable entity)" do
-              post "/expenses", payload
-              status_is 422
-            end
-          end
+          it_behaves_like "the data type and format are correct", "XML", "<some>data</some>"
         end
 
         context "when invalid XML is submitted" do
-          let(:payload) { "invalid XML" }
-
-          it "returns an error message" do
-            post "/expenses", payload
-            xml_parsed_includes("error" => "Invalid XML")
-          end
-
-          it "responds with a 422 (Unprocessable entity)" do
-            post "/expenses", payload
-            status_is 422
-          end
+          it_behaves_like "the data format is incorrect", "XML", "invalid XML"
         end
       end
 
-      context "when the header sepcifises an unused content type" do
+      context "when the header specifies an unused content type" do
         before { header "Content-Type", "text/plain" }
 
-        it "returns an error message" do
-          post "/expenses", "some data"
-          expect(last_response.body).to eq("Error: Unrecognised data format")
-        end
-
-        it "responds with a 422 (Unprocessable entity)" do
-          post "/expenses", "some data"
-          status_is 422
-        end
+        it_behaves_like "the data type is incorrect"
       end
 
       context "when the header does not specify a header type" do
-        it "returns an error message" do
-          post "/expenses", "some data"
-          expect(last_response.body).to eq("Error: Unrecognised data format")
-        end
-
-        it "responds with a 422 (Unprocessable entity)" do
-          post "/expenses", "some data"
-          status_is 422
-        end
+        it_behaves_like "the data type is incorrect"
       end
     end
 
