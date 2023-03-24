@@ -1,2 +1,3 @@
-require_relative "app/api"
-run ExpenseTracker::API.new
+require_relative "zeitwerk"
+
+run API.new

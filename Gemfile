@@ -21,3 +21,7 @@ gem "sqlite3", "~> 1.6"
 gem "byebug", "~> 11.1"
 
 gem "ox", "~> 2.14"
+
+gem "zeitwerk", "~> 2.6" # For autoloading
+
+gem "filewatcher", "~> 2.1" # For reloading, so we don't have to restart the server after every change
