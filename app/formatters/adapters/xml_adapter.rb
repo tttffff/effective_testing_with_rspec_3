@@ -1,12 +1,13 @@
 require "ox"
 
-# TODO: This class feels messy. Is it worth learning more about XML parsing to make it cleaner?
+# TODO: This class feels messy. Is it worth learning about XML parsing to make it cleaner?
 
 module Formatters
   module Adapters
     class XMLAdapter < Base
       def read(request)
-        Ox.load(request.body.read, mode: :hash, symbolize_keys: false)
+        hash = Ox.load(request.body.read, mode: :hash, symbolize_keys: false)
+        hash.transform_values(&method(:string_to_number))
       rescue Ox::ParseError
         raise InvalidDataError, write(error: "Invalid XML")
       end
@@ -32,6 +33,12 @@ module Formatters
             Ox::Element.new(key) << value.to_s
           end
         end
+      end
+
+      # Float if it has a decimal point, otherwise Integer
+      def string_to_number(str)
+        return str unless str[/\A[\d\.]+\z/] # Original if not a number
+        str.include?(".") ? str.to_f : str.to_i
       end
     end
   end

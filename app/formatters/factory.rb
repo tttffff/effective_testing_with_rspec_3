@@ -11,7 +11,7 @@ module Formatters
       when "application/xml"
         Adapters::XMLAdapter.new
       else
-        raise UnrecognisedFormatError.new("Error: Unrecognised data format")
+        raise UnrecognisedFormatError.new(accepted_formats: %w[application/json application/xml])
       end
     end
   end

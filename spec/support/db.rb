@@ -1,3 +1,5 @@
+require_relative "../../config/sequel"
+
 RSpec.configure do |config|
   config.before(:suite) do
     Sequel.extension :migration

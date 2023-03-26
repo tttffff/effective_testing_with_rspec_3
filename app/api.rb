@@ -15,9 +15,12 @@ class API < Sinatra::Base
     return formatter.write(expense_id: result.expense_id) if result.success?
     status 422
     formatter.write(error: result.error_message)
-  rescue Formatters::UnrecognisedFormatError, Formatters::Adapters::InvalidDataError => e
-    status 422
-    return e.message
+  rescue Formatters::UnrecognisedFormatError => e
+    status 415
+    e.message
+  rescue Formatters::Adapters::InvalidDataError => e
+    status 400
+    e.message
   end
 
   get "/expenses/:date" do
@@ -27,6 +30,6 @@ class API < Sinatra::Base
     formatter.write(result)
   rescue Formatters::UnrecognisedFormatError => e
     status 406
-    return e.message
+    e.message
   end
 end

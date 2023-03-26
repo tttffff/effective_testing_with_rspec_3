@@ -9,9 +9,9 @@ loader.inflector.inflect(
   "xml_adapter" => "XMLAdapter"
 )
 
-# For reloading
+# For reloading, will not work on API unless you create a new instance after reload
 if ENV["RACK_ENV"] == "development"
-  require "filewatcher" # Seems weird to require it when not needed, equally weird not at top of file
+  require "filewatcher" # Seems weird to go here, but why require it when not needed.
   loader.enable_reloading
   filewatcher = Filewatcher.new('app/')
   Thread.new(filewatcher) { _1.watch { loader.reload } }
